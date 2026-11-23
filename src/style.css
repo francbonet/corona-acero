@@ -1,0 +1,44 @@
+:root {
+  color-scheme: dark;
+  --ink: #120d0a;
+  --parchment: #e8d6a2;
+  --wood: #5c3d24;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+#app canvas {
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+/* Panel de depuración (tecla `), bajo la barra superior. */
+#hud {
+  position: fixed;
+  top: 44px;
+  right: 8px;
+  max-width: calc(100vw - 40px);
+  padding: 6px 10px;
+  font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  color: var(--parchment);
+  background: rgba(18, 13, 10, 0.8);
+  border: 2px solid var(--wood);
+  white-space: pre-wrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+#selection-box {
+  position: fixed;
+  display: none;
+  border: 1px solid var(--parchment);
+  background: rgba(232, 214, 162, 0.12);
+  pointer-events: none;
+}

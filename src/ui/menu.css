@@ -1,0 +1,785 @@
+/* Menús: pantalla de título, nueva partida, partidas guardadas, opciones y pausa (src/ui/menu.tsx). */
+
+#menu-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  font-family: 'Pixelify Sans', ui-monospace, monospace;
+  color: #efe0b4;
+}
+
+#menu-root > * {
+  pointer-events: auto;
+}
+
+#menu-root h1,
+#menu-root h2,
+#menu-root legend {
+  font-family: 'Silkscreen', ui-monospace, monospace;
+  font-weight: 400;
+}
+
+#menu-root button,
+#menu-root input {
+  font-family: inherit;
+  font-size: 15px;
+}
+
+/* ── Pantalla de título ── */
+
+.menu-title-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #0c0806;
+}
+
+.menu-title-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+.menu-title-box {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(calc(100% - 32px), 420px);
+  padding: 22px 24px 20px;
+  background-color: rgb(27 18 12 / 0.88);
+  background-image: var(--tex-wood, none);
+  background-size: 64px 64px;
+  border: 10px solid transparent;
+  border-image: var(--frame-wood) 5 / 10px / 0 repeat;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.55);
+  text-align: center;
+}
+
+.menu-title-box h1 {
+  margin: 0;
+  font-size: clamp(28px, 7vw, 44px);
+  line-height: 1.05;
+  color: #e3b23c;
+  text-shadow:
+    3px 3px 0 #140d08,
+    0 0 1px #140d08;
+}
+
+.menu-title-box h1 span {
+  font-size: 0.6em;
+  color: #c8b48a;
+}
+
+.menu-tagline {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #d8c69a;
+}
+
+/* En pantallas estrechas o verticales el título va abajo y deja ver la villa arriba (src/ui/title-art.ts). */
+@media (max-aspect-ratio: 5/4) {
+  .menu-title-screen {
+    place-items: end center;
+    padding-bottom: max(16px, 4vh);
+  }
+}
+
+/* En pantallas anchas el título va a la izquierda, sobre el prado, y deja ver la villa. */
+@media (min-width: 900px) {
+  .menu-title-screen {
+    place-items: center start;
+    padding-left: max(32px, 6vw);
+  }
+}
+
+.menu-footer {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-size: 12px;
+  color: rgb(239 224 180 / 0.75);
+  text-shadow: 1px 1px 0 #140d08;
+}
+
+/* ── Capa de los demás menús ── */
+
+.menu-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: auto;
+  background-color: #0c0806;
+  image-rendering: pixelated;
+}
+
+/* Fuera de la partida, detrás de los menús va la ilustración del título, algo oscurecida. */
+.menu-overlay .menu-title-art {
+  position: fixed;
+}
+
+.menu-art-dim {
+  position: fixed;
+  inset: 0;
+  background: rgb(12 8 6 / 0.45);
+}
+
+.menu-overlay > .menu-panel {
+  position: relative;
+}
+
+.menu-overlay.in-game {
+  background: rgb(12 8 6 / 0.7);
+}
+
+.menu-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 460px);
+  /* Alto de la pantalla menos el margen de la capa, el relleno y el marco: si no cabe, el panel se desplaza por
+     dentro (centrado en la capa, lo que sobresaliera por arriba quedaría fuera de alcance). */
+  max-height: calc(100dvh - 84px);
+  overflow: auto;
+  padding: 16px 18px;
+  color: #2b1d14;
+  background-color: #e8d6a2;
+  background-image: var(--tex-parchment, none);
+  background-size: 96px 96px;
+  border: 10px solid transparent;
+  border-image: var(--frame-wood) 5 / 10px / 0 repeat;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.55);
+}
+
+.menu-panel.wide {
+  width: min(100%, 760px);
+}
+
+.menu-panel h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #3b2716;
+}
+
+.menu-panel fieldset {
+  margin: 0;
+  padding: 8px 10px 10px;
+  display: grid;
+  gap: 8px;
+  border: 2px solid #c8b48a;
+}
+
+.menu-panel legend {
+  padding: 0 6px;
+  font-size: 12px;
+  color: #5c3d24;
+}
+
+.menu-form {
+  display: grid;
+  gap: 10px;
+}
+
+.menu-buttons {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.menu-btn {
+  display: block;
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 6px 16px;
+  text-align: center;
+  text-decoration: none;
+  color: #efe0b4;
+  background: #4a3220;
+  border: 2px solid #140d08;
+  box-shadow:
+    inset 2px 2px 0 #7a5232,
+    inset -2px -2px 0 #2b1d14;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.menu-btn:hover:not(:disabled) {
+  background: #5c3d24;
+  color: #f6dc7a;
+}
+
+.menu-btn.primary {
+  color: #2b1d14;
+  background: #e3b23c;
+  box-shadow:
+    inset 2px 2px 0 #f6dc7a,
+    inset -2px -2px 0 #a8782a;
+}
+
+.menu-btn.primary:hover:not(:disabled) {
+  background: #f2c650;
+  color: #140d08;
+}
+
+.menu-btn.danger {
+  background: #7a1f1f;
+  box-shadow:
+    inset 2px 2px 0 #a3271c,
+    inset -2px -2px 0 #4a1212;
+}
+
+.menu-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.menu-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.menu-chip {
+  min-height: 30px;
+  padding: 2px 10px;
+  color: #2b1d14;
+  background: #dcc89a;
+  border: 2px solid #5c3d24;
+  box-shadow:
+    inset 2px 2px 0 #efe0b4,
+    inset -2px -2px 0 #b8a07a;
+  cursor: pointer;
+}
+
+.menu-chip:hover:not(:disabled) {
+  background: #efe0b4;
+}
+
+.menu-chip.on {
+  color: #efe0b4;
+  background: #5c3d24;
+  border-color: #2b1d14;
+  box-shadow:
+    inset 2px 2px 0 #7a5232,
+    inset -2px -2px 0 #2b1d14;
+}
+
+.menu-chip.on:hover:not(:disabled) {
+  background: #6e4a2c;
+}
+
+.menu-chip.danger {
+  color: #7a1f1f;
+}
+
+.menu-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#menu-root button:focus-visible,
+#menu-root a:focus-visible,
+#menu-root input:focus-visible {
+  outline: 2px solid #e3b23c;
+  outline-offset: 2px;
+}
+
+.menu-bonus {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #5c3d24;
+}
+
+.menu-rival {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.menu-select {
+  min-height: 30px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 6px;
+  color: #2b1d14;
+  font: inherit;
+  background: #f4ead0;
+  border: 2px solid #5c3d24;
+  box-shadow: inset 2px 2px 0 #c8b48a;
+  cursor: pointer;
+}
+
+#menu-root select:focus-visible {
+  outline: 2px solid #e3b23c;
+  outline-offset: 2px;
+}
+
+.menu-swatch {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #2b1d14;
+}
+
+.menu-seed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-seed input,
+.menu-save-new input {
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 2px 8px;
+  color: #2b1d14;
+  background: #f4ead0;
+  border: 2px solid #5c3d24;
+  box-shadow: inset 2px 2px 0 #c8b48a;
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 13px;
+  color: #5c3d24;
+}
+
+.menu-error {
+  margin: 0;
+  color: #a3271c;
+}
+
+/* ── Partidas guardadas ── */
+
+.menu-save-new {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-saves {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-saves li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 10px;
+  background: rgb(255 255 255 / 0.18);
+  border: 2px solid #c8b48a;
+}
+
+.menu-save-info {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.menu-save-info strong {
+  overflow-wrap: anywhere;
+}
+
+.menu-save-info span,
+.menu-save-info small {
+  font-size: 13px;
+  color: #5c3d24;
+}
+
+.menu-save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Opciones ── */
+
+.menu-slider {
+  display: grid;
+  grid-template-columns: 90px 1fr 54px;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-slider input {
+  width: 100%;
+  accent-color: #7a5232;
+}
+
+.menu-slider output {
+  text-align: right;
+  font-family: 'Silkscreen', ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.menu-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.menu-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #7a5232;
+}
+
+.menu-keys {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.menu-keys div {
+  display: grid;
+  grid-template-columns: minmax(120px, 40%) 1fr;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid #c8b48a;
+}
+
+.menu-keys dt {
+  font-family: 'Silkscreen', ui-monospace, monospace;
+  font-size: 12px;
+  color: #3b2716;
+}
+
+.menu-keys dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .menu-slider {
+    grid-template-columns: 1fr 54px;
+  }
+
+  .menu-slider span {
+    grid-column: 1 / -1;
+  }
+
+  .menu-keys div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* ── Nueva partida (src/ui/new-game.tsx) ── */
+
+.menu-panel.wide.ng-panel {
+  width: min(100%, 960px);
+}
+
+.ng-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.ng-side {
+  display: grid;
+  gap: 12px;
+}
+
+.ng-shield {
+  flex: 0 0 auto;
+  image-rendering: pixelated;
+}
+
+.ng-num {
+  font-family: 'Silkscreen', ui-monospace, monospace;
+  font-size: 0.86em;
+}
+
+/* Las coronas: tarjetas con su escudo. */
+.ng-factions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+#menu-root .ng-faction {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 4px 6px;
+  color: #2b1d14;
+  background: #e2d0a0;
+  border: 2px solid #8a6a42;
+  box-shadow:
+    inset 2px 2px 0 #f2e4bc,
+    inset -2px -2px 0 #c4ac7c;
+  font-size: 13px;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+}
+
+#menu-root .ng-faction span {
+  min-height: 2.3em;
+  display: grid;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+#menu-root .ng-faction:hover {
+  background: #efe0b4;
+  border-color: #5c3d24;
+}
+
+#menu-root .ng-faction.on {
+  color: #f6dc7a;
+  background: #4a3220;
+  border-color: #e3b23c;
+  box-shadow:
+    inset 2px 2px 0 #7a5232,
+    inset -2px -2px 0 #2b1d14,
+    0 0 0 2px #140d08;
+}
+
+/* Ficha de la corona elegida. */
+.ng-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: rgb(255 248 224 / 0.45);
+  border: 2px solid #c8b48a;
+  box-shadow: inset 0 0 0 1px #f2e4bc;
+}
+
+.ng-card-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ng-card h3 {
+  margin: 0;
+  font-family: 'Silkscreen', ui-monospace, monospace;
+  font-weight: 400;
+  font-size: 16px;
+  color: #3b2716;
+}
+
+.ng-card-line {
+  margin: 0;
+  font-size: 13px;
+  color: #5c3d24;
+}
+
+.ng-card-line b {
+  font-weight: 600;
+  color: #7a1f1f;
+}
+
+.ng-bonus {
+  margin: 2px 0 0;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #2b1d14;
+}
+
+.ng-bonus li::marker {
+  color: #a8782a;
+}
+
+/* Rivales. */
+.ng-rival {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ng-rival .menu-select {
+  flex: 1 1 130px;
+}
+
+.ng-seg {
+  display: flex;
+  border: 2px solid #5c3d24;
+}
+
+#menu-root .ng-seg button {
+  min-height: 26px;
+  padding: 0 8px;
+  color: #2b1d14;
+  background: #dcc89a;
+  border: 0;
+  border-left: 2px solid #5c3d24;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#menu-root .ng-seg button:first-child {
+  border-left: 0;
+}
+
+#menu-root .ng-seg button:hover {
+  background: #efe0b4;
+}
+
+#menu-root .ng-seg button.on {
+  color: #efe0b4;
+  background: #5c3d24;
+}
+
+#menu-root .ng-remove {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: #7a1f1f;
+  background: #dcc89a;
+  border: 2px solid #5c3d24;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#menu-root .ng-remove:hover {
+  background: #efe0b4;
+}
+
+.ng-add {
+  justify-self: start;
+}
+
+/* Mapas: miniaturas. */
+.ng-maps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+#menu-root .ng-map {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 4px;
+  color: #2b1d14;
+  background: #e2d0a0;
+  border: 2px solid #8a6a42;
+  box-shadow:
+    inset 2px 2px 0 #f2e4bc,
+    inset -2px -2px 0 #c4ac7c;
+  cursor: pointer;
+}
+
+#menu-root .ng-map small {
+  font-size: 12px;
+  color: #5c3d24;
+}
+
+#menu-root .ng-map:hover:not(:disabled) {
+  background: #efe0b4;
+  border-color: #5c3d24;
+}
+
+#menu-root .ng-map.on {
+  color: #f6dc7a;
+  background: #4a3220;
+  border-color: #e3b23c;
+  box-shadow:
+    inset 2px 2px 0 #7a5232,
+    inset -2px -2px 0 #2b1d14,
+    0 0 0 2px #140d08;
+}
+
+#menu-root .ng-map.on small {
+  color: #dcc89a;
+}
+
+#menu-root .ng-map:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ng-map-name {
+  font-size: 15px;
+}
+
+.ng-thumb {
+  position: relative;
+  display: block;
+  width: min(100%, 160px);
+  aspect-ratio: 2 / 1;
+}
+
+.ng-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.ng-pin {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -5px 0 0 -5px;
+  border: 1px solid #140d08;
+  box-shadow: 0 0 0 1px #efe0b4;
+}
+
+/* Estrecho: una columna; las coronas, de cuatro en cuatro igualmente. */
+@media (max-width: 820px) {
+  .ng-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ng-maps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ng-maps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ng-card {
+    flex-direction: column;
+    align-items: center;
+  }
+}

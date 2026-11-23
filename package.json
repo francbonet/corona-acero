@@ -1,0 +1,30 @@
+{
+  "name": "corona-y-acero",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "RTS de navegador ambientado en la Baja Edad Media, en pixel art isométrico",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "torneo": "vitest run --config vitest.torneo.config.ts",
+    "plantillas": "vitest run --config vitest.plantillas.config.ts",
+    "itch": "npm run build && rm -f corona-y-acero-web.zip && cd dist && zip -qr ../corona-y-acero-web.zip ."
+  },
+  "dependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
+    "pixi.js": "^8.23.0",
+    "preact": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
