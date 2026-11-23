@@ -227,6 +227,7 @@ Parte 1 hecha: pantalla de título, menú de nueva partida, pausa, opciones y gu
   - Arreglado de paso: si caía un edificio mientras investigaba, esa tecnología quedaba bloqueada para siempre.
   - Las partidas guardadas antes de este cambio siguen cargando.
 - [x] Despliegue estático preparado: `npm run itch` genera el zip para itch.io, `netlify.toml` para Netlify, icono de pestaña y descripción; guía en [publicar.md](publicar.md). Falta publicarlo (con la cuenta del autor)
+- [x] Versión de escritorio con Electron: `npm run escritorio` la abre, y `escritorio:mac`, `escritorio:win` y `escritorio:linux` generan los instaladores (DMG y ZIP para Apple Silicon e Intel, instalador y portable de Windows, AppImage de Linux), con icono propio de pixel art y una prueba de humo que comprueba que arranca. Sin firma digital por ahora. La versión del juego sale de `package.json` (0.9.0)
 
 ### Diseño y arte
 - [x] Pantalla de título: una villa pintada con el arte del juego, a la medida de la ventana, y la música del menú (*La Corona*)

@@ -57,6 +57,44 @@ npm run itch
 
 Hace el build y lo empaqueta en `corona-y-acero-web.zip`, listo para subir a itch.io. Cómo publicarlo en itch.io, Netlify o GitHub Pages: [docs/publicar.md](docs/publicar.md).
 
+### Versión de escritorio (Electron)
+
+```bash
+npm run escritorio
+```
+
+Hace el build y abre el juego en una ventana de Electron (F11: pantalla completa).
+
+```bash
+npm run escritorio:mac
+```
+
+```bash
+npm run escritorio:win
+```
+
+```bash
+npm run escritorio:linux
+```
+
+Empaquetan la aplicación en `release/`:
+
+| Sistema | Ficheros |
+|---|---|
+| macOS | `.dmg` y `.zip` para Apple Silicon (`arm64`) y para Intel (`x64`) |
+| Windows | instalador y versión portable (`.exe`, x64) |
+| Linux | `.AppImage` (x64) |
+
+Se pueden generar los tres desde un Mac. No van firmados (ver [docs/publicar.md](docs/publicar.md)).
+
+```bash
+npm run escritorio:prueba
+```
+
+Abre el juego en Electron sin mostrar la ventana y comprueba que arranca sin errores; necesita el build hecho. Con `-- --captura=foto.png` guarda una captura, y con `-- --ruta="index.html?seed=prueba"` abre una partida en vez del menú.
+
+`npm run icono` vuelve a generar el icono de la aplicación (`build/icon.png`) a partir de la corona de pixel art.
+
 ```bash
 npm run torneo
 ```
@@ -121,6 +159,8 @@ src/
   gallery/  galería de unidades (galeria.html): todas las figuras, animaciones y direcciones
   input/    cámara, selección y órdenes con el ratón
   ui/       HUD con Preact (barra de recursos, selección, panel de órdenes) e iconos
+electron/   proceso principal de la versión de escritorio (Electron) e icono de la ventana
+scripts/    torneo de IA, plantillas de Aseprite, icono y empaquetado de escritorio
 tests/      tests de Vitest
 docs/       diseño, arte y hoja de ruta
 ```

@@ -46,8 +46,26 @@ Hace falta que el proyecto esté en un repositorio de GitHub. Este proyecto toda
 
 Como las rutas son relativas, funciona también en la dirección `usuario.github.io/repositorio/`.
 
+## Versión de escritorio (Electron)
+
+`npm run escritorio:mac`, `escritorio:win` y `escritorio:linux` generan los instaladores en `release/`. Se pueden generar los tres desde un Mac. Ocupan unos 110–125 MB cada uno, porque llevan su propio Chromium.
+
+- **Cómo está hecha**: `electron/main.cjs` abre una ventana con el build de `dist/`, servido por un protocolo propio (`corona://juego/`).
+  - Las partidas guardadas van a la carpeta de datos de la aplicación y no se mezclan con las del navegador.
+  - El sonido empieza sin esperar al primer clic.
+  - F11 pone la pantalla completa.
+- **Por qué hay un script**: electron-builder no acepta rutas con caracteres como «&». Por eso `scripts/escritorio.mjs` empaqueta en una carpeta temporal y copia el resultado a `release/`.
+- **Sin firmar**: los instaladores no llevan firma digital, así que los sistemas avisan la primera vez.
+  - macOS: clic derecho sobre la aplicación → *Abrir* → *Abrir*. Si dice que está dañada (pasa con lo que se descarga de internet), hay que quitarle la marca de descarga: `xattr -dr com.apple.quarantine "/Applications/Corona y Acero.app"`.
+  - Windows: en el aviso de SmartScreen, *Más información* → *Ejecutar de todas formas*.
+  - Linux: dar permiso de ejecución al `.AppImage` (`chmod +x`).
+- **Firmar**: para quitar los avisos hace falta una cuenta de desarrollador de Apple (firma y notarización) y un certificado de firma de código para Windows. Se configuran en el campo `build` de `package.json` (`mac.identity`, `win.certificateFile`…).
+- **itch.io**: acepta los instaladores. Se suben como archivos de la página, marcando cada uno con su sistema (y se pueden subir también con [butler](https://itch.io/docs/butler/)).
+- La versión (`version` en `package.json`) es la misma que sale en la pantalla de título y en el nombre de los instaladores.
+
 ## Antes de publicar
 
 - `npm test` en verde y `npm run build` sin errores (el build pasa antes el comprobador de tipos).
 - Prueba el build tal cual se publicará: `npx vite preview` lo sirve en http://localhost:4173.
-- Revisa la versión que sale en la esquina de la pantalla de título.
+- Revisa la versión: la de `package.json`, que sale en la esquina de la pantalla de título y en los instaladores de escritorio.
+- Para la versión de escritorio: `npm run escritorio:prueba` tras el build.

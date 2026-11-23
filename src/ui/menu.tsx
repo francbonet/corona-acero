@@ -190,7 +190,7 @@ function TitleScreen({ go, deps }: { go: (s: MenuScreen) => void; deps: MenuDeps
           </a>
         </nav>
       </div>
-      <footer class="menu-footer">Versión 0.9 · un juego original</footer>
+      <footer class="menu-footer">Versión {__APP_VERSION__} · un juego original</footer>
     </div>
   );
 }
