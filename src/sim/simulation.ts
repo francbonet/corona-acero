@@ -218,7 +218,7 @@ export class Simulation {
     h.add(this.winner);
     for (let id = 1; id < e.highWater; id++) {
       if (e.mask[id] === 0) continue;
-      h.add(id).add(e.mask[id]).add(e.x[id]).add(e.y[id]).add(e.owner[id]).add(e.hp[id]);
+      h.add(id).add(e.generation[id]).add(e.mask[id]).add(e.x[id]).add(e.y[id]).add(e.owner[id]).add(e.hp[id]);
       h.add(e.moveState[id]).add(e.goalX[id]).add(e.goalY[id]).add(e.pathIndex[id]);
       h.add(e.task[id]).add(e.taskTarget[id]).add(e.carryAmount[id]).add(e.resAmount[id]);
       h.add(e.buildProgress[id]).add(e.trainProgress[id]).add(e.queue[id]?.length ?? 0);

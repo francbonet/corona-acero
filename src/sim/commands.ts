@@ -79,6 +79,8 @@ export type Command =
   | {
       /** Avanzar hacia un punto atacando a los enemigos que aparezcan. */
       readonly type: 'attackMove';
+      /** La formación acompaña también al asedio y los sanadores a su paso. */
+      readonly escort?: boolean;
       readonly player: number;
       readonly units: readonly number[];
       readonly x: number;

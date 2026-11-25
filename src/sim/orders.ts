@@ -51,7 +51,7 @@ export function applyCommand(sim: Simulation, command: Command): void {
         sim.entities.orderX[id] = x;
         sim.entities.orderY[id] = y;
       }
-      moveGroup(sim, ids, x, y, true);
+      moveGroup(sim, ids, x, y, true, command.escort);
       break;
     }
     case 'stance': {
@@ -202,7 +202,7 @@ function isOwnBuilding(sim: Simulation, player: number, id: number): boolean {
  * Mueve un grupo. Con `formation`, un grupo de soldados marcha en formación (cuerpo a cuerpo delante, tiradores
  * detrás) y al paso del más lento; si no, o si ya está casi allí, se reparte por las casillas libres alrededor.
  */
-export function moveGroup(sim: Simulation, ids: readonly number[], rawX: number, rawY: number, formation = false): void {
+export function moveGroup(sim: Simulation, ids: readonly number[], rawX: number, rawY: number, formation = false, escort = false): void {
   if (ids.length === 0) return;
   const e = sim.entities;
   const grid = sim.grid;
@@ -210,16 +210,15 @@ export function moveGroup(sim: Simulation, ids: readonly number[], rawX: number,
   const y = Math.max(0, Math.min(grid.height * FP_ONE - 1, rawY | 0));
   const goals = formation ? formationGoals(sim, ids, x, y) : null;
   if (goals) {
-    // El paso lo marca el soldado más lento; el asedio, los monjes y los aldeanos van detrás a su ritmo (si no,
-    // todo el ejército iría a paso de ariete).
+    // Normalmente el paso lo marca el soldado más lento; al escoltar, también se espera al apoyo.
     let slowest = Infinity;
-    for (const id of ids) if (formationRank(sim, id) < 2) slowest = Math.min(slowest, e.speed[id]);
+    for (const id of ids) if (escort || formationRank(sim, id) < 2) slowest = Math.min(slowest, e.speed[id]);
     for (const g of goals) {
       e.goalX[g.id] = g.x;
       e.goalY[g.id] = g.y;
       e.repaths[g.id] = 0;
       sim.pathing.request(g.id);
-      e.speedCap[g.id] = formationRank(sim, g.id) < 2 && e.speed[g.id] > slowest ? slowest : 0;
+      e.speedCap[g.id] = (escort || formationRank(sim, g.id) < 2) && e.speed[g.id] > slowest ? slowest : 0;
     }
     return;
   }

@@ -59,6 +59,9 @@ export class Entities {
   readonly capacity: number;
 
   readonly mask: Uint32Array;
+  /** Distingue una entidad de otra que reutiliza su id tras morir. */
+  readonly generation: Uint32Array;
+  private nextGeneration = 1;
 
   // ── Position (punto fijo, casillas × 256) ──
   readonly x: Int32Array;
@@ -192,6 +195,7 @@ export class Entities {
     };
 
     this.mask = u32();
+    this.generation = u32();
     this.x = i32();
     this.y = i32();
     this.prevX = i32();
@@ -277,6 +281,7 @@ export class Entities {
     }
     this.clear(id);
     this.mask[id] = components;
+    this.generation[id] = this.nextGeneration++;
     return id;
   }
 

@@ -6,8 +6,10 @@ import { FP_SHIFT, tileCenterFixed } from '../engine/fixed';
 import { garrisonCapacity } from '../sim/combat';
 import { Comp, MoveState, Order } from '../sim/entities';
 import { trainBlocker } from '../sim/orders';
+import { nearestPassableTiles } from '../sim/slots';
 import type { AiPlayer } from './ai-player';
 import type { AiContext } from './context';
+import { runOffense } from './offense';
 
 /** Edificios donde la IA entrena su ejército. */
 const MILITARY: readonly BuildingType[] = [
@@ -28,7 +30,7 @@ export function runMilitary(ai: AiPlayer, ctx: AiContext): void {
   if (ctx.threats.length > 0) {
     defend(ai, ctx);
   } else {
-    attack(ai, ctx);
+    runOffense(ai, ctx, gatherPoint(ctx));
   }
   calmDown(ai, ctx);
 }
@@ -54,7 +56,10 @@ function gatherPoint(ctx: AiContext): { x: number; y: number } {
   const cy = ctx.sim.grid.height >> 1;
   const dx = Math.sign(cx - ctx.homeX);
   const dy = Math.sign(cy - ctx.homeY);
-  return { x: tileCenterFixed(ctx.homeX + dx * 7), y: tileCenterFixed(ctx.homeY + dy * 7) };
+  const tile = nearestPassableTiles(ctx.sim.grid, ctx.homeX + dx * 7, ctx.homeY + dy * 7, 1)[0];
+  return tile === undefined
+    ? { x: tileCenterFixed(ctx.homeX), y: tileCenterFixed(ctx.homeY) }
+    : { x: tileCenterFixed(tile % ctx.sim.grid.width), y: tileCenterFixed(Math.floor(tile / ctx.sim.grid.width)) };
 }
 
 function setRallyPoints(ai: AiPlayer, ctx: AiContext): void {
@@ -238,6 +243,13 @@ function defend(ai: AiPlayer, ctx: AiContext): void {
   const free = army.filter((id) => !busy(id) && (e.order[id] !== Order.AttackMove || ai.thinks % 5 === 0));
   if (free.length > 0) ai.send({ type: 'attackMove', player: ctx.player, units: free, x: target.x, y: target.y });
   ai.attackState = 'gather';
+  ai.campaign = null;
+  // El asedio y los sanadores tampoco deben quedarse solos en el frente al volver a defender.
+  const support = [...ctx.siege, ...ctx.monks];
+  if (support.length > 0) {
+    const p = gatherPoint(ctx);
+    ai.send({ type: 'move', player: ctx.player, units: support, x: p.x, y: p.y });
+  }
 
   // Toque a rebato si los soldados enemigos que hay junto al centro de la villa superan claramente al ejército
   // (no por aldeanos enemigos ni por escaramuzas junto a un campamento lejano).
@@ -272,92 +284,4 @@ function calmDown(ai: AiPlayer, ctx: AiContext): void {
   const tcs = ctx.buildings[BuildingType.TownCenter].filter((b) => (sim.garrisonCount.get(b) ?? 0) > 0);
   if (tcs.length > 0) ai.send({ type: 'ungarrison', player: ctx.player, buildings: tcs });
   ai.alarm = false;
-}
-
-/** Oleadas: con suficiente ejército, a por el edificio enemigo conocido más cercano; si no se conoce ninguno, a explorar. */
-function attack(ai: AiPlayer, ctx: AiContext): void {
-  const sim = ctx.sim;
-  const e = sim.entities;
-  const army = soldiers(ai, ctx);
-  const wave = Math.max(4, Math.round((ai.diff.waveSize[ctx.era] ?? 99) * ai.strategy.aggression));
-  const known = [...ai.memory.enemyBuildings.values()];
-  const idle = army.filter((id) => e.order[id] === Order.None && e.attackTarget[id] === 0);
-
-  if (ai.attackState === 'gather') {
-    if (ctx.minute < ai.diff.firstAttackMinute || army.length < wave) return;
-    if (known.length === 0) {
-      // No conocemos edificios enemigos: a donde se vio al enemigo por última vez, o a explorar.
-      hunt(ai, ctx, idle);
-      return;
-    }
-    ai.attackState = 'attack';
-  }
-
-  if (known.length === 0 && army.length >= Math.max(3, wave * 0.35)) {
-    hunt(ai, ctx, idle);
-    return;
-  }
-  if (army.length < Math.max(3, wave * 0.35) || known.length === 0) {
-    // Retirada: a reagruparse en casa.
-    ai.attackState = 'gather';
-    const p = gatherPoint(ctx);
-    const back = army.filter((id) => e.attackTarget[id] === 0);
-    if (back.length > 0) ai.send({ type: 'move', player: ctx.player, units: back, x: p.x, y: p.y });
-    return;
-  }
-  const from = army.length > 0 ? centroid(ctx, army) : { x: tileCenterFixed(ctx.homeX), y: tileCenterFixed(ctx.homeY) };
-  const dist = (b: { x: number; y: number }) => {
-    const dx = tileCenterFixed(b.x) - from.x;
-    const dy = tileCenterFixed(b.y) - from.y;
-    return dx * dx + dy * dy;
-  };
-  const targets = [...ai.memory.enemyBuildings].sort((a, b) => dist(a[1]) - dist(b[1]) || a[0] - b[0]);
-  if (targets.length === 0) return;
-  // Sin defensores a la vista, el ejército se reparte en grupos de 6 para derribar varios edificios a la vez.
-  const groups = ctx.enemies.length < 3 ? Math.max(1, Math.min(targets.length, Math.floor(idle.length / 6))) : 1;
-  for (let g = 0; g < groups; g++) {
-    const units = groups === 1 ? idle : idle.filter((_, i) => i % groups === g);
-    const t = targets[g][1];
-    if (units.length > 0) ai.send({ type: 'attackMove', player: ctx.player, units, x: tileCenterFixed(t.x), y: tileCenterFixed(t.y) });
-  }
-  // El asedio, directo a los edificios (repartido igual que el ejército).
-  const siegeTargets = ctx.enemies.length < 3 ? Math.min(targets.length, Math.max(1, ctx.siege.length)) : 1;
-  ctx.siege.forEach((id, i) => {
-    const current = e.orderTarget[id] || e.attackTarget[id];
-    if (current && e.isAlive(current) && ai.memory.enemyBuildings.has(current)) return; // ya va a por uno
-    const best = targets[i % siegeTargets][0];
-    if (e.isAlive(best)) ai.send({ type: 'attack', player: ctx.player, units: [id], target: best });
-  });
-  // Los monjes acompañan al ejército para curar.
-  const monks = ctx.monks.filter((id) => e.moveState[id] === MoveState.Idle && e.attackTarget[id] === 0);
-  if (monks.length > 0 && army.length > 0) {
-    const c = centroid(ctx, army);
-    ai.send({ type: 'move', player: ctx.player, units: monks, x: c.x, y: c.y });
-  }
-}
-
-/** Sin edificios enemigos conocidos: a por las últimas unidades vistas, o recorrer el mapa buscándolas. */
-function hunt(ai: AiPlayer, ctx: AiContext, idle: readonly number[]): void {
-  if (idle.length === 0 || ai.thinks % 2 !== 0) return;
-  const seen = ai.memory.lastEnemy;
-  if (seen && ctx.sim.tick - seen.tick < 120 * ctx.sim.tickRate) {
-    ai.send({ type: 'attackMove', player: ctx.player, units: idle, x: seen.x, y: seen.y });
-    return;
-  }
-  // Recorre una rejilla que cubre todo el mapa, empezando por donde se vio al enemigo, saltando lo que ya se ve.
-  if (ai.huntPoints.length === 0) {
-    const w = ctx.sim.grid.width;
-    const h = ctx.sim.grid.height;
-    const from = seen ? { x: seen.x >> FP_SHIFT, y: seen.y >> FP_SHIFT } : { x: w >> 1, y: h >> 1 };
-    for (let y = 6; y < h; y += 10) for (let x = 6; x < w; x += 10) ai.huntPoints.push([x, y]);
-    ai.huntPoints.sort((a, b) => Math.abs(a[0] - from.x) + Math.abs(a[1] - from.y) - (Math.abs(b[0] - from.x) + Math.abs(b[1] - from.y)) || a[0] - b[0] || a[1] - b[1]);
-  }
-  const vis = ctx.sim.visibility;
-  for (let k = 0; k < ai.huntPoints.length; k++) {
-    const [x, y] = ai.huntPoints[ai.armyWp % ai.huntPoints.length];
-    ai.armyWp++;
-    if (vis.isVisible(ctx.player, x, y)) continue;
-    ai.send({ type: 'attackMove', player: ctx.player, units: idle, x: tileCenterFixed(x), y: tileCenterFixed(y) });
-    return;
-  }
 }

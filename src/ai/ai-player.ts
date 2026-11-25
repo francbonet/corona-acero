@@ -9,7 +9,9 @@ import { DIFFICULTY_DEFS, Difficulty, type DifficultyDef } from './difficulty';
 import { runEconomy } from './economy';
 import { LORDS, type Lord } from './lords';
 import { runMilitary } from './military';
+import type { Campaign } from './offense';
 import { STRATEGIES, type Strategy } from './strategies';
+import type { FailedAttack } from './tactics';
 
 export interface AiOptions {
   readonly difficulty?: Difficulty;
@@ -39,6 +41,11 @@ export class AiPlayer implements Controller {
   /** Aldeanos ya usados en esta decisión (para no darles dos órdenes). */
   readonly reserved = new Set<number>();
   attackState: 'gather' | 'attack' = 'gather';
+  /** Fuerza que salió junta; los reclutas esperan en casa hasta poder reforzarla en grupo. */
+  campaign: Campaign | null = null;
+  regroupUntil = 0;
+  /** Recuerda durante un tiempo dónde y por qué flanco fracasó una ofensiva. */
+  failedAttacks = new Map<number, FailedAttack>();
   alarm = false;
   lastThreat = 0;
   /** Último tick con soldados enemigos junto al centro de la villa (para tocar a rebato y dar el fin de la alarma). */

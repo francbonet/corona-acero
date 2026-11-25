@@ -294,7 +294,12 @@ Código en `src/ai/`. Cada rival lo dirige un señor histórico de su corona (Al
   - Corrige la mezcla según la proporción de cada clase enemiga que ha visto, con una tabla de ventajas: lanceros contra caballería, caballería ligera contra arqueros y asedio, infantería de choque contra lanceros, arqueros contra infantería.
   - Los cuarteles, galerías o caballerizas que añade son del tipo que pide esa mezcla.
   - Fabrica asedio en proporción a su ejército y guarda el oro para él si hace falta.
-  - Ataca en oleadas a partir de cierto tamaño y minuto, y se retira si pierde demasiado. Cuando no ve defensores, reparte el ejército para derribar varios edificios a la vez.
+  - Reúne una fuerza en el punto de reunión antes de atacar, respetando el tamaño mínimo y el minuto de cada dificultad. Mantiene un objetivo común según su valor militar/económico, distancia y defensas conocidas; no divide el ejército para perseguir edificios distintos.
+  - Los refuerzos esperan compañía y salen en grupo hacia el bloque principal. El ejército marcha en formación al paso del apoyo para escoltar al asedio y a los sanadores. Ante fortalezas, el asedio de largo alcance dispara con la escolta fuera del fuego defensivo.
+  - Valora los combates por vida restante, mejoras, cadencia y contraataques frente a las unidades visibles. Si está claramente superada o pierde la mayor parte de la fuerza desplegada, retira también a las unidades que están combatiendo y al apoyo, y espera 25 segundos para reagruparse antes de salir otra vez.
+  - Compara el acceso directo con dos flancos y sopesa distancia, defensas recordadas, tropas visibles y terreno conocido. Rodea las posiciones peligrosas cuando compensa y replantea la aproximación si descubre una nueva fortaleza. No conoce obstáculos ni tropas ocultos en terreno sin explorar.
+  - Un ejército mayoritariamente de caballería sin asedio puede hostigar una economía expuesta: prioriza los trabajadores cercanos y limita la persecución a esa zona. Si aparecen defensores, mantiene el combate principal.
+  - Recuerda durante 3 minutos el objetivo y el flanco de una ofensiva fallida, para favorecer otra alternativa. Si la marcha pasa 45 segundos sin avanzar ni combatir, se retira para poder probar otro acceso.
   - Si le atacan en casa, defiende con todo y toca a rebato cuando le superan.
 - **Exploración**: un batidor recorre el mapa sin pararse a pelear. Si el ejército no sabe dónde está el enemigo, va a donde lo vio por última vez o barre el mapa por cuadrantes.
 - **Rendición**: se rinde cuando no le quedan aldeanos ni forma de hacer más y tiene menos de 5 soldados.
