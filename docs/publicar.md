@@ -39,10 +39,13 @@ El proyecto ya trae `netlify.toml`: Netlify ejecuta `npm run build` y publica `d
 
 ## GitHub Pages
 
-Hace falta que el proyecto esté en un repositorio de GitHub. Este proyecto todavía no es un repositorio git.
+Repositorio: [francbonet/corona-acero](https://github.com/francbonet/corona-acero).
 
-1. *Settings → Pages → Build and deployment → Source*: **GitHub Actions**.
-2. Añade el flujo oficial *Static HTML* de GitHub, cambiando el paso de subida para que haga antes `npm ci && npm run build` y suba la carpeta `dist`.
+El flujo [Publicar en GitHub Pages](../.github/workflows/pages.yml) publica automáticamente cada cambio de `main`. Instala las dependencias con `npm ci`, ejecuta los tests, compila el juego y sube únicamente `dist/`. Si falla una comprobación, no se publica esa versión.
+
+Configuración inicial: *Settings → Pages → Build and deployment → Source*: **GitHub Actions**. Un repositorio privado necesita un plan de GitHub que permita Pages; no hace falta hacer público el código si el plan lo admite. La web publicada puede ser pública aunque el repositorio sea privado.
+
+Para repetir un despliegue sin cambiar el código: *Actions → Publicar en GitHub Pages → Run workflow* sobre `main`. El resultado y la dirección publicada aparecen en la ejecución.
 
 Como las rutas son relativas, funciona también en la dirección `usuario.github.io/repositorio/`.
 
